@@ -1,0 +1,96 @@
+# table_detection.py
+
+# Step 1: Download dataset from Roboflow
+from roboflow import Roboflow
+
+rf = Roboflow(api_key="")
+project = rf.workspace("riricva").project("canteen-9xwww")
+version = project.version(1)
+dataset = version.download("yolov8-obb")  # YOLOv8-OBB format
+
+# Step 2: Train YOLOv8 model (skip if already trained)
+from ultralytics import YOLO
+
+model = YOLO("yolov8n-obb.pt")  # Using YOLOv8n with Oriented Bounding Boxes
+
+# Train the model on your downloaded dataset
+model.train(data=dataset.location + "/data.yaml", epochs=30, imgsz=640)
+
+
+# Step 3: Run predictions on a test image
+results = model.predict(
+    source="C:/Users/HP/Desktop/NMIMS/NMIMS_YEAR3_SEM6/CVA/Project/canteen-1/test/images/17_jpeg.rf.f2e6e16c3f43a46e2e30cfceceeab4b5.jpg",
+    save=True,
+    project="runs",
+    name="detect_canteen",
+    conf=0.4
+)
+
+import cv2
+import matplotlib.pyplot as plt
+#C:\Users\HP\Desktop\NMIMS\NMIMS_YEAR3_SEM6\CVA\Project\canteen-1\train\images\8_jpeg.rf.166c4283b7f7d9a711920dedf3f8e5e3.jpg
+img_path = "C:/Users/HP/Desktop/NMIMS/NMIMS_YEAR3_SEM6/CVA/Project/canteen-1/test/images/17_jpeg.rf.f2e6e16c3f43a46e2e30cfceceeab4b5.jpg"  # Update path if file name differs
+
+img = cv2.imread(img_path)
+if img is None:
+    print("❌ Image not found at:", img_path)
+else:
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.figure(figsize=(10, 10))
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title("Prediction - Occupied & Empty Table Detection")
+    plt.show()
+
+empty_count, occupied_count = 0, 0
+
+for result in results:
+    if result.obb is None:
+        print("⚠️ No oriented boxes detected.")
+        continue
+
+    for box in result.obb:
+        class_id = int(box.cls)
+        label = model.names[class_id].lower()
+        if 'empty' in label:
+            empty_count += 1
+        else:
+            occupied_count += 1
+
+print(f"✅ Empty Tables Detected: {empty_count}")
+print(f"✅ Occupied Tables Detected: {occupied_count}")
+
+from ultralytics import YOLO
+
+# Step 1: Path to your custom video file
+video_path = "lolvid2.mp4"  # 👈 update this to your video path
+
+# Step 2: Load your trained YOLO model
+model = YOLO("runs/obb/train/weights/best.pt")  # 👈 path to your trained model
+
+# Step 3: Run prediction on the video
+results = model.predict(
+    source=video_path,
+    save=True,
+    save_txt=True,       # Optional: saves labels in text format
+    save_conf=True,      # Optional: saves confidence scores
+    project="runs",
+    name="video_test_predict",
+    conf=0.4,
+    stream=False         # Set to True for frame-by-frame real-time view (optional)
+)
+
+print("✅ Inference completed on video!")
+
+from IPython.display import HTML
+from base64 import b64encode
+
+video_output_path = "runs/video_test_predict/lolvid2.avi"  # Update if name differs
+
+# Display in notebook
+mp4 = open(video_output_path, 'rb').read()
+data_url = "data:video/mp4;base64," + b64encode(mp4).decode()
+HTML(f'<video width=700 controls><source src="{data_url}" type="video/mp4"></video>')
+
+
+this is a part of the project too. give me a final requirements.txt file
