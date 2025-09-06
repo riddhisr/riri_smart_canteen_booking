@@ -1,0 +1,10 @@
+streamlit==1.29.0
+opencv-python==4.8.1.78
+ultralytics==8.0.153
+numpy==1.26.4
+Pillow==10.1.0
+twilio==8.5.1
+qrcode==7.4.2
+roboflow==0.2.22
+matplotlib==3.8.1
+ipython==8.16.2
